@@ -1,5 +1,9 @@
 <resources>
     <string name="app_name">Smog Bilet</string>
-    <string name="refres">Odśwież</string>
     <string name="is_free">Darmowa?</string>
+    <string name="refresh">Odśwież</string>
+    <string name="yes">TAK</string>
+    <string name="no">NIE</string>
+    <string name="checking_in_progress">Sprawdzam...</string>
+    <string name="today_is">Dzisiaj jest</string>
 </resources>

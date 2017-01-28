@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">Smog Bilet</string>
     <string name="no_info" translatable="false">--</string>
-    <string name="refres">Refresh</string>
+    <string name="refresh">Refresh</string>
+    <string name="yes">YES</string>
+    <string name="today_is">Today is</string>
+    <string name="no">NO</string>
     <string name="is_free">Is free?</string>
+    <string name="checking_in_progress">Checking....</string>
 </resources>
