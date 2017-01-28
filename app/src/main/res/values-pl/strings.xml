@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Smog Bilet</string>
+    <string name="refres">Odśwież</string>
+    <string name="is_free">Darmowa?</string>
+</resources>
