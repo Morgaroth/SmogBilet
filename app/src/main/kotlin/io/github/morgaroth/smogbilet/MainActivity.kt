@@ -4,15 +4,15 @@ import android.os.Build
 import android.os.Bundle
 import android.os.StrictMode
 import android.support.v7.app.AppCompatActivity
+import android.text.format.DateUtils
 import android.widget.Button
 import android.widget.TextView
-import org.jetbrains.anko.AnkoLogger
-import org.jetbrains.anko.doAsync
-import org.jetbrains.anko.info
-import org.jetbrains.anko.uiThread
+import org.jetbrains.anko.*
 import org.jsoup.Jsoup
+import java.text.SimpleDateFormat
 import java.util.*
 
+data class Info(val date: Calendar, val text: String)
 
 class MainActivity : AppCompatActivity(), AnkoLogger {
 
@@ -36,9 +36,29 @@ class MainActivity : AppCompatActivity(), AnkoLogger {
 
 
         val now = GregorianCalendar()
-        (findViewById(R.id.today) as TextView).text = String.format("%1\$tA %1\$td %1\$tb %1\$tY", now)
+        (findViewById(R.id.today) as TextView).text = renderDate(now)
         button?.setOnClickListener { check() }
         check()
+    }
+
+    private fun renderDate(now: Calendar) = String.format("%1\$tA %1\$td %1\$tb %1\$tY", now)
+
+    fun parseDate(str: String): Calendar? {
+        val format = SimpleDateFormat("dd.MM.yyyy", Locale.ENGLISH)
+        try {
+            val time = format.parse(str)
+            val cal = Calendar.getInstance()
+            cal.time = time
+            return cal
+        } catch (e: Exception) {
+            warn("ex ${e.message}")
+            return null
+        }
+    }
+
+    fun isNotFuture(cal: Calendar): Boolean {
+        val now = Calendar.getInstance()
+        return cal.before(now)
     }
 
     fun check() {
@@ -47,26 +67,26 @@ class MainActivity : AppCompatActivity(), AnkoLogger {
             info("Checking...")
             val doc = Jsoup.connect(url).get()
             val messages = doc.select(".clearBoth").toList().map {
-                val date = it.select(".przedzial").text()
                 val text = it.select(".tytul").text()
-                info("info $date $text")
-                Info(date, text)
-            }
-            val free = messages.filter {
-                it.text.contains("Darmowa komunikacja miejska")
-            }
+                if (text.contentEquals("Darmowa komunikacja miejska dla kierowców")) {
+                    val date = parseDate(it.select(".przedzial").text())
+                    if (date != null) Info(date, text) else null
+                } else null
+            }.filter { it != null }.map { it!! }
 
-            info("Darmowa komwunikacja $free")
+            val free = messages
+                    .filter { isNotFuture(it.date) }
+                    .sortedByDescending { it.date.timeInMillis }
+
+            val msg = if (free.filter { DateUtils.isToday(it.date.timeInMillis) }.isNotEmpty()) R.string.yes else R.string.no
+            val lastKnown = if (free.isNotEmpty()) renderDate(free.first().date) else getString(R.string.no_info)
+
             uiThread {
-                if (free.isNotEmpty()) {
-                    infoView?.text = getString(R.string.yes)
-                    info2View?.text = free.first().date
-                } else {
-                    infoView?.text = getString(R.string.no)
-                    info2View?.text = getString(R.string.no_info)
-                }
+                infoView?.text = getString(msg)
+                info2View?.text = lastKnown
                 button?.text = getString(R.string.refresh)
             }
+            info("Checked.")
         }
     }
 }
